@@ -1,0 +1,11 @@
+# Backend
+node_modules/
+.env
+
+# Frontend
+traveller-companion-frontend/node_modules/
+traveller-companion-frontend/.next/
+traveller-companion-frontend/.env
+
+# Logs
+npm-debug.log*
