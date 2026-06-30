@@ -32,7 +32,8 @@ const tripSchema = new mongoose.Schema({
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "User"
+        ref: "User",
+        required: true
     },
     savedSuggestions: [
         {
