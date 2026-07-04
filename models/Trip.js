@@ -40,7 +40,11 @@ const tripSchema = new mongoose.Schema({
             type: mongoose.Schema.Types.ObjectId,
             ref: "PlaceSuggestion"
         }
-    ]
+    ],
+    itinerary: {
+    type: String,
+    default: ""
+},
 
 }, { timestamps: true });
 

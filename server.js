@@ -19,6 +19,7 @@ app.use("/api/trips", require("./routes/tripRoutes"));
 app.use("/api/cities", require("./routes/cityRoutes"));
 app.use("/api/suggestions", require("./routes/suggestionRoutes"));
 app.use("/api/users", require("./routes/userRoutes"));
+app.use("/api/ai", require("./routes/aiRoutes"));
 
 const PORT = process.env.PORT || 5000;
 

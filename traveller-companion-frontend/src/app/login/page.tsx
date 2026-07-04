@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const API_URL = "http://localhost:5000/api";
 
@@ -103,6 +104,13 @@ export default function LoginPage() {
             {isLoading ? "Logging in..." : "Login"}
           </button>
         </form>
+
+        <p className="mt-6 text-center text-sm text-gray-600">
+          Don’t have an account?{" "}
+          <Link href="/register" className="font-semibold text-gray-900 underline-offset-4 hover:underline">
+            Sign up
+          </Link>
+        </p>
       </div>
     </main>
   );

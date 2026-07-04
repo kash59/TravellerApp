@@ -1,26 +1,175 @@
 @import "tailwindcss";
 
+/* ---------- Theme ---------- */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f8fafc;
+  --foreground: #0f172a;
+
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+
+  --secondary: #14b8a6;
+
+  --card: #ffffff;
+  --border: #e2e8f0;
+
+  --muted: #64748b;
+
+  --radius: 18px;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+
+  --font-sans: var(--font-poppins);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ---------- Base ---------- */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
+  background: linear-gradient(
+    180deg,
+    #f8fafc 0%,
+    #eef6ff 100%
+  );
+
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+
+  font-family: var(--font-poppins);
+
+  margin: 0;
+
+  min-height: 100vh;
+}
+
+/* ---------- Selection ---------- */
+
+::selection {
+  background: #2563eb;
+  color: white;
+}
+
+/* ---------- Scrollbar ---------- */
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #eef2f7;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* ---------- Buttons ---------- */
+
+button {
+  cursor: pointer;
+  transition: all .25s ease;
+}
+
+button:hover {
+  transform: translateY(-2px);
+}
+
+/* ---------- Inputs ---------- */
+
+input,
+textarea,
+select {
+
+  outline: none;
+
+  transition: .25s;
+
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+
+  box-shadow:
+      0 0 0 4px rgba(37,99,235,.12);
+
+}
+
+/* ---------- Images ---------- */
+
+img {
+  user-select: none;
+}
+
+/* =====================================================
+   AUTH PAGE ANIMATIONS
+===================================================== */
+
+/* Floating animation */
+
+@keyframes floating {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-18px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.animate-floating {
+  animation: floating 7s ease-in-out infinite;
+}
+
+/* Slow background zoom */
+
+@keyframes slowZoom {
+  from {
+    transform: scale(1);
+  }
+
+  to {
+    transform: scale(1.08);
+  }
+}
+
+.animate-slow-zoom {
+  animation: slowZoom 18s ease-in-out infinite alternate;
+}
+
+/* Fade in */
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(25px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeUp .8s ease forwards;
 }

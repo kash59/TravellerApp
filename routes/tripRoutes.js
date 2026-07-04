@@ -525,5 +525,86 @@ router.delete("/:id", authMiddleware, async (req, res) => {
 
 });
 
+// ============================
+// SAVE AI ITINERARY
+// ============================
+
+router.put("/:id/itinerary", authMiddleware, async (req, res) => {
+  try {
+    const { itinerary } = req.body;
+
+    const trip = await Trip.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        userId: req.user.id,
+      },
+      {
+        itinerary,
+      },
+      {
+        new: true,
+      }
+    );
+
+    if (!trip) {
+      return res.status(404).json({
+        message: "Trip not found",
+      });
+    }
+
+    res.json({
+      message: "Itinerary saved successfully",
+      trip,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+});
+// ============================
+// SAVE AI ITINERARY
+// ============================
+
+router.put(
+  "/:id/itinerary",
+  authMiddleware,
+  async (req, res) => {
+    try {
+      const { itinerary } = req.body;
+
+      if (!itinerary) {
+        return res.status(400).json({
+          message: "Itinerary is required",
+        });
+      }
+
+      const trip = await Trip.findOne({
+        _id: req.params.id,
+        userId: req.user.id,
+      });
+
+      if (!trip) {
+        return res.status(404).json({
+          message: "Trip not found",
+        });
+      }
+
+      trip.itinerary = itinerary;
+
+      await trip.save();
+
+      res.status(200).json({
+        message: "Itinerary saved successfully",
+        trip,
+      });
+
+    } catch (error) {
+      res.status(500).json({
+        message: error.message,
+      });
+    }
+  }
+);
 
 module.exports = router;

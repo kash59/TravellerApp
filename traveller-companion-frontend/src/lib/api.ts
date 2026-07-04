@@ -31,6 +31,7 @@ export interface PlaceSuggestion {
 
 export interface TripDetails extends Trip {
   savedSuggestions: PlaceSuggestion[];
+  itinerary: string;
 }
 
 export async function getCityRecommendations(
@@ -241,4 +242,81 @@ export async function getStatusAnalytics(token: string) {
   }
 
   return data;
+}
+
+export async function generateItinerary(
+  destination: string,
+  budget: number,
+  days: number
+) {
+  const response = await fetch("http://localhost:5000/api/ai/itinerary", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      destination,
+      budget,
+      days,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to generate itinerary");
+  }
+
+  return data;
+}
+export async function saveItinerary(
+  tripId: string,
+  itinerary: string,
+  token: string
+) {
+  const response = await fetch(
+    `${API_URL}/trips/${tripId}/itinerary`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        itinerary,
+      }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data?.message || "Failed to save itinerary");
+  }
+
+  return data;
+}
+export async function getSavedItinerary(
+  tripId: string,
+  token: string
+) {
+  const response = await fetch(
+    `${API_URL}/trips/${tripId}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data?.message || "Failed to load itinerary"
+    );
+  }
+
+  return data.itinerary;
 }
