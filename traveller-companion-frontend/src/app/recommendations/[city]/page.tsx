@@ -121,7 +121,9 @@ interface CurrentUser {
   name: string;
 }
 
-const API_URL = "http://localhost:5000/api";
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:5000/api";
 export default function RecommendationPage({
   params,
 }: {
@@ -364,7 +366,7 @@ try {
       places: dynamicPlaces.map(
   (place) => place.name
 ),
-
+foods: [],
 location: {
   latitude: Number(
     dynamicData.location.latitude

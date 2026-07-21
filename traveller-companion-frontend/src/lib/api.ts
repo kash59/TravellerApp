@@ -1,5 +1,6 @@
-const API_URL = "http://localhost:5000/api";
-
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:5000/api";
 interface CreateTripPayload {
   title: string;
   destination: string;
@@ -243,13 +244,12 @@ export async function getStatusAnalytics(token: string) {
 
   return data;
 }
-
 export async function generateItinerary(
   destination: string,
   budget: number,
   days: number
 ) {
-  const response = await fetch("http://localhost:5000/api/ai/itinerary", {
+  const response = await fetch(`${API_URL}/ai/itinerary`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -264,7 +264,9 @@ export async function generateItinerary(
   const data = await response.json();
 
   if (!response.ok) {
-    throw new Error(data.message || "Failed to generate itinerary");
+    throw new Error(
+      data.message || "Failed to generate itinerary."
+    );
   }
 
   return data;

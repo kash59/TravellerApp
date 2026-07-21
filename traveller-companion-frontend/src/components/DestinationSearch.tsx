@@ -13,7 +13,9 @@ import {
 
 import { useRouter } from "next/navigation";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  "http://localhost:5000/api";
 
 export default function DestinationSearch() {
   const router = useRouter();
