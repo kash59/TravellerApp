@@ -309,6 +309,7 @@ export async function getSavedItinerary(
       cache: "no-store",
     }
   );
+  
 
   const data = await response.json();
 
@@ -319,4 +320,299 @@ export async function getSavedItinerary(
   }
 
   return data.itinerary;
+}
+// ==========================================
+// COMMUNITY TRAVEL TIPS
+// ==========================================
+
+export type TravelTipCategory =
+  | "Food"
+  | "Hidden Gem"
+  | "Hotel"
+  | "Safety"
+  | "Transport"
+  | "Shopping"
+  | "Other";
+
+export type TravelTipSort =
+  | "helpful"
+  | "newest"
+  | "upvoted";
+
+export interface TravelTipAuthor {
+  _id: string;
+  name: string;
+  badge?: string;
+  points?: number;
+}
+
+export interface TravelTip {
+  _id: string;
+
+  destination: string;
+
+  title: string;
+
+  description: string;
+
+  category: TravelTipCategory;
+
+  author: TravelTipAuthor;
+
+  upvotes: number;
+
+  downvotes: number;
+
+  createdAt: string;
+
+  updatedAt: string;
+}
+
+export interface CreateTravelTipPayload {
+  destination: string;
+
+  title: string;
+
+  description: string;
+
+  category: TravelTipCategory;
+}
+
+
+// ==========================================
+// GET TRAVEL TIPS
+// ==========================================
+
+export async function getTravelTips(
+  destination: string,
+  sort: TravelTipSort = "helpful"
+): Promise<TravelTip[]> {
+
+  const response = await fetch(
+    `${API_URL}/travel-tips/${encodeURIComponent(
+      destination
+    )}?sort=${sort}`,
+    {
+      cache: "no-store",
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+
+    throw new Error(
+      data?.message ||
+        "Failed to fetch community travel tips"
+    );
+
+  }
+
+  return data;
+}
+
+
+// ==========================================
+// CREATE TRAVEL TIP
+// ==========================================
+
+export async function createTravelTip(
+  payload: CreateTravelTipPayload,
+  token: string
+) {
+
+  const response = await fetch(
+    `${API_URL}/travel-tips`,
+    {
+      method: "POST",
+
+      headers: {
+
+        "Content-Type": "application/json",
+
+        Authorization: `Bearer ${token}`,
+
+      },
+
+      body: JSON.stringify(payload),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+
+    throw new Error(
+      data?.message ||
+        "Failed to share travel tip"
+    );
+
+  }
+
+  return data;
+}
+
+
+// ==========================================
+// UPVOTE TRAVEL TIP
+// ==========================================
+
+export async function upvoteTravelTip(
+  tipId: string,
+  token: string
+) {
+
+  const response = await fetch(
+    `${API_URL}/travel-tips/${tipId}/upvote`,
+    {
+      method: "POST",
+
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+
+    throw new Error(
+      data?.message ||
+        "Failed to upvote travel tip"
+    );
+
+  }
+
+  return data;
+}
+
+
+// ==========================================
+// DOWNVOTE TRAVEL TIP
+// ==========================================
+
+export async function downvoteTravelTip(
+  tipId: string,
+  token: string
+) {
+
+  const response = await fetch(
+    `${API_URL}/travel-tips/${tipId}/downvote`,
+    {
+      method: "POST",
+
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+
+    throw new Error(
+      data?.message ||
+        "Failed to downvote travel tip"
+    );
+
+  }
+
+  return data;
+}
+
+
+// ==========================================
+// DELETE TRAVEL TIP
+// ==========================================
+
+export async function deleteTravelTip(
+  tipId: string,
+  token: string
+) {
+
+  const response = await fetch(
+    `${API_URL}/travel-tips/${tipId}`,
+    {
+      method: "DELETE",
+
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+
+    throw new Error(
+      data?.message ||
+        "Failed to delete travel tip"
+    );
+
+  }
+
+  return data;
+}
+// ==========================================
+// USER PROFILE
+// ==========================================
+
+export interface ProfileUser {
+  _id: string;
+  name: string;
+  email: string;
+  points: number;
+  badge: string;
+  rank: number;
+}
+
+export interface ProfileStats {
+  totalTips: number;
+  totalUpvotes: number;
+  totalDownvotes: number;
+}
+
+export interface ProfileTip {
+  _id: string;
+  destination: string;
+  title: string;
+  description: string;
+  category: string;
+  upvotes: number;
+  downvotes: number;
+  createdAt: string;
+}
+
+export interface UserProfile {
+  user: ProfileUser;
+  stats: ProfileStats;
+  tips: ProfileTip[];
+}
+
+export async function getMyProfile(
+  token: string
+): Promise<UserProfile> {
+
+  const response = await fetch(
+    `${API_URL}/users/profile`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      cache: "no-store",
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data?.message || "Failed to fetch profile"
+    );
+  }
+
+  return data;
 }
