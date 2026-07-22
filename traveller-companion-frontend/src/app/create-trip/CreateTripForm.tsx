@@ -25,27 +25,14 @@ export default function CreateTripForm() {
   const searchParams = useSearchParams();
 
   const editTripId = searchParams.get("edit");
+  const isEditMode = useMemo(() => Boolean(editTripId), [editTripId]);
 
-  const isEditMode = useMemo(
-    () => Boolean(editTripId),
-    [editTripId]
-  );
-
-  const [formData, setFormData] =
-    useState<FormState>(initialFormState);
-
+  const [formData, setFormData] = useState<FormState>(initialFormState);
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-  const [createdTripId, setCreatedTripId] =
-    useState<string | null>(null);
-
+  const [createdTripId, setCreatedTripId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isPrefillLoading, setIsPrefillLoading] =
-    useState(false);
-
-  // ==========================================
-  // LOAD TRIP WHEN EDITING
-  // ==========================================
+  const [isPrefillLoading, setIsPrefillLoading] = useState(false);
 
   useEffect(() => {
     const loadTripForEdit = async () => {
@@ -87,10 +74,6 @@ export default function CreateTripForm() {
     loadTripForEdit();
   }, [editTripId, router]);
 
-  // ==========================================
-  // INPUT CHANGE
-  // ==========================================
-
   const onChange =
     (field: keyof FormState) =>
     (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -99,10 +82,6 @@ export default function CreateTripForm() {
         [field]: event.target.value,
       }));
     };
-
-  // ==========================================
-  // SUBMIT
-  // ==========================================
 
   const handleSubmit = async (
     event: React.FormEvent<HTMLFormElement>
@@ -133,9 +112,7 @@ export default function CreateTripForm() {
     }
 
     if (new Date(endDate) < new Date(startDate)) {
-      setError(
-        "End Date must be the same or after Start Date."
-      );
+      setError("End Date must be the same or after Start Date.");
       return;
     }
 
@@ -165,19 +142,11 @@ export default function CreateTripForm() {
         budget: budgetValue,
       };
 
-      // EDIT TRIP
       if (editTripId) {
         await updateTrip(editTripId, payload, token);
-
         setSuccessMessage("Trip updated successfully.");
-      }
-
-      // CREATE NEW TRIP
-      else {
-        const createdTrip = await createTrip(
-          payload,
-          token
-        );
+      } else {
+        const createdTrip = await createTrip(payload, token);
 
         const tripId =
           createdTrip?._id ||
@@ -188,7 +157,6 @@ export default function CreateTripForm() {
         }
 
         setSuccessMessage("Trip created successfully.");
-
         setFormData(initialFormState);
       }
     } catch (submitError) {
@@ -205,341 +173,300 @@ export default function CreateTripForm() {
     }
   };
 
-  // ==========================================
-  // UI
-  // ==========================================
-
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#f7f5f2] px-5 py-12 text-black md:px-8 md:py-16">
+    <main className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50 px-6 py-12 text-black">
 
-      {/* ====================================== */}
-      {/* PINTEREST-STYLE BACKGROUND */}
-      {/* ====================================== */}
+      <div className="absolute -left-40 top-10 h-96 w-96 rounded-full bg-blue-200/40 blur-3xl" />
+      <div className="absolute -right-40 top-20 h-96 w-96 rounded-full bg-cyan-200/40 blur-3xl" />
 
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div className="relative z-10 mx-auto grid min-h-[calc(100vh-120px)] max-w-7xl items-center gap-12 lg:grid-cols-2">
 
-        {/* Soft background blobs */}
+        <div className="hidden lg:block">
 
-        <div className="absolute -left-24 top-20 h-80 w-80 rounded-full bg-rose-200/40 blur-3xl" />
-
-        <div className="absolute -right-20 top-10 h-96 w-96 rounded-full bg-sky-200/40 blur-3xl" />
-
-        <div className="absolute bottom-0 left-1/3 h-96 w-96 rounded-full bg-amber-100/60 blur-3xl" />
-
-        {/* LEFT TOP CARD */}
-
-        <div className="absolute left-[3%] top-[7%] hidden w-48 -rotate-6 rounded-[28px] bg-white p-3 shadow-xl xl:block">
-          <div className="flex h-56 items-center justify-center rounded-[22px] bg-gradient-to-br from-sky-200 via-cyan-100 to-blue-200">
-            <div className="text-center">
-              <span className="text-6xl">🌊</span>
-
-              <p className="mt-3 text-sm font-semibold text-slate-700">
-                Coastal Escape
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* LEFT BOTTOM CARD */}
-
-        <div className="absolute bottom-[5%] left-[7%] hidden w-52 rotate-6 rounded-[28px] bg-white p-3 shadow-xl xl:block">
-          <div className="flex h-64 items-center justify-center rounded-[22px] bg-gradient-to-br from-orange-100 via-rose-100 to-amber-200">
-            <div className="text-center">
-              <span className="text-6xl">🏜️</span>
-
-              <p className="mt-3 text-sm font-semibold text-slate-700">
-                Golden Adventures
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT TOP CARD */}
-
-        <div className="absolute right-[5%] top-[8%] hidden w-52 rotate-6 rounded-[28px] bg-white p-3 shadow-xl xl:block">
-          <div className="flex h-64 items-center justify-center rounded-[22px] bg-gradient-to-br from-emerald-100 via-green-100 to-lime-100">
-            <div className="text-center">
-              <span className="text-6xl">🌿</span>
-
-              <p className="mt-3 text-sm font-semibold text-slate-700">
-                Nature Retreat
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* RIGHT BOTTOM CARD */}
-
-        <div className="absolute bottom-[4%] right-[7%] hidden w-48 -rotate-6 rounded-[28px] bg-white p-3 shadow-xl xl:block">
-          <div className="flex h-56 items-center justify-center rounded-[22px] bg-gradient-to-br from-violet-100 via-purple-100 to-pink-100">
-            <div className="text-center">
-              <span className="text-6xl">🏙️</span>
-
-              <p className="mt-3 text-sm font-semibold text-slate-700">
-                City Stories
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Small decorative elements */}
-
-        <div className="absolute left-[18%] top-[18%] hidden rotate-12 rounded-full bg-white px-5 py-3 text-2xl shadow-md lg:block">
-          ✈️
-        </div>
-
-        <div className="absolute bottom-[15%] right-[20%] hidden -rotate-12 rounded-full bg-white px-5 py-3 text-2xl shadow-md lg:block">
-          📍
-        </div>
-
-      </div>
-
-      {/* ====================================== */}
-      {/* CREATE / EDIT TRIP CARD */}
-      {/* ====================================== */}
-
-      <div className="relative z-10 mx-auto w-full max-w-2xl rounded-[32px] border border-white/80 bg-white/90 p-7 shadow-[0_30px_80px_rgba(15,23,42,0.14)] backdrop-blur-xl md:p-10">
-
-        {/* HEADER */}
-
-        <div className="mb-8">
-
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-sky-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-sky-700">
-            <span>✈</span>
-            Plan your journey
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-white/80 px-4 py-2 text-sm font-semibold text-cyan-700 shadow-sm">
+            ✈ Your journey starts here
           </div>
 
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 md:text-4xl">
-            {isEditMode ? "Edit Trip" : "Create Trip"}
+          <h1 className="max-w-xl text-5xl font-extrabold leading-tight tracking-tight text-slate-900">
+            Your next adventure
+            <span className="block bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">
+              starts with a plan.
+            </span>
           </h1>
 
-          <p className="mt-2 text-sm text-gray-500">
-            {isEditMode
-              ? "Update your travel details and keep your adventure organized."
-              : "Turn your travel inspiration into your next unforgettable journey."}
+          <p className="mt-6 max-w-lg text-lg leading-8 text-slate-600">
+            Create your trip, organize the important details and turn
+            your travel ideas into an unforgettable journey.
           </p>
+
+          <div className="mt-10 space-y-5">
+
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-100 text-xl">
+                📍
+              </div>
+
+              <div>
+                <p className="font-bold text-slate-900">
+                  Plan your destination
+                </p>
+                <p className="text-sm text-slate-500">
+                  Keep your travel details organized.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-cyan-100 text-xl">
+                ✨
+              </div>
+
+              <div>
+                <p className="font-bold text-slate-900">
+                  Discover recommendations
+                </p>
+                <p className="text-sm text-slate-500">
+                  Explore places for your journey.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-sky-100 text-xl">
+                🗺️
+              </div>
+
+              <div>
+                <p className="font-bold text-slate-900">
+                  Build your itinerary
+                </p>
+                <p className="text-sm text-slate-500">
+                  Turn your plan into a complete trip.
+                </p>
+              </div>
+            </div>
+
+          </div>
+
+          <div className="mt-10 max-w-lg rounded-3xl bg-gradient-to-r from-blue-600 to-cyan-500 p-6 text-white shadow-xl">
+
+            <p className="text-sm font-semibold text-white/80">
+              TRAVELLER COMPANION
+            </p>
+
+            <h2 className="mt-2 text-2xl font-bold">
+              Explore more. Plan smarter.
+            </h2>
+
+            <div className="mt-5 flex items-center gap-3 text-sm">
+              <span className="rounded-full bg-white/15 px-4 py-2">
+                Plan
+              </span>
+              <span>→</span>
+              <span className="rounded-full bg-white/15 px-4 py-2">
+                Explore
+              </span>
+              <span>→</span>
+              <span className="rounded-full bg-white/15 px-4 py-2">
+                Travel
+              </span>
+            </div>
+
+          </div>
 
         </div>
 
-        {/* EDIT LOADING */}
+        <div className="mx-auto w-full max-w-2xl rounded-3xl border border-white/80 bg-white/90 p-8 shadow-[0_25px_80px_rgba(15,23,42,0.12)] backdrop-blur-xl md:p-10">
 
-        {isPrefillLoading && (
-          <p className="mb-5 rounded-2xl bg-gray-100 px-4 py-3 text-sm text-gray-600">
-            Loading trip data...
-          </p>
-        )}
+          <div className="mb-8">
 
-        {/* FORM */}
+            <p className="font-semibold uppercase tracking-[0.2em] text-cyan-600">
+              Plan your journey
+            </p>
 
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-5"
-        >
+            <h1 className="mt-3 text-3xl font-extrabold text-slate-900">
+              {isEditMode ? "Edit Trip" : "Create Trip"}
+            </h1>
 
-          {/* TRIP TITLE */}
-
-          <div className="space-y-2">
-
-            <label
-              htmlFor="title"
-              className="text-sm font-semibold text-gray-700"
-            >
-              Trip Title
-            </label>
-
-            <input
-              id="title"
-              type="text"
-              value={formData.title}
-              onChange={onChange("title")}
-              placeholder="Summer in Istanbul"
-              className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-black shadow-sm outline-none transition placeholder:text-gray-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
-            />
+            <p className="mt-2 text-sm text-slate-500">
+              {isEditMode
+                ? "Update your travel details below."
+                : "Enter your trip details and start planning your adventure."}
+            </p>
 
           </div>
 
-          {/* DESTINATION */}
-
-          <div className="space-y-2">
-
-            <label
-              htmlFor="destination"
-              className="text-sm font-semibold text-gray-700"
-            >
-              Destination
-            </label>
-
-            <input
-              id="destination"
-              type="text"
-              value={formData.destination}
-              onChange={onChange("destination")}
-              placeholder="Istanbul"
-              className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-black shadow-sm outline-none transition placeholder:text-gray-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
-            />
-
-          </div>
-
-          {/* DATES */}
-
-          <div className="grid gap-5 md:grid-cols-2">
-
-            <div className="space-y-2">
-
-              <label
-                htmlFor="startDate"
-                className="text-sm font-semibold text-gray-700"
-              >
-                Start Date
-              </label>
-
-              <input
-                id="startDate"
-                type="date"
-                value={formData.startDate}
-                onChange={onChange("startDate")}
-                className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-black shadow-sm outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
-              />
-
-            </div>
-
-            <div className="space-y-2">
-
-              <label
-                htmlFor="endDate"
-                className="text-sm font-semibold text-gray-700"
-              >
-                End Date
-              </label>
-
-              <input
-                id="endDate"
-                type="date"
-                value={formData.endDate}
-                onChange={onChange("endDate")}
-                className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-black shadow-sm outline-none transition focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
-              />
-
-            </div>
-
-          </div>
-
-          {/* BUDGET */}
-
-          <div className="space-y-2">
-
-            <label
-              htmlFor="budget"
-              className="text-sm font-semibold text-gray-700"
-            >
-              Budget
-            </label>
-
-            <input
-              id="budget"
-              type="number"
-              min="0"
-              step="0.01"
-              value={formData.budget}
-              onChange={onChange("budget")}
-              placeholder="1200"
-              className="w-full rounded-2xl border border-gray-200 bg-white px-4 py-3.5 text-black shadow-sm outline-none transition placeholder:text-gray-400 focus:border-sky-400 focus:ring-4 focus:ring-sky-100"
-            />
-
-          </div>
-
-          {/* ERROR */}
-
-          {error && (
-            <p className="rounded-2xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
-              {error}
+          {isPrefillLoading && (
+            <p className="mb-5 rounded-xl bg-slate-100 px-4 py-3 text-sm text-slate-600">
+              Loading trip data...
             </p>
           )}
 
-          {/* SUCCESS */}
+          <form onSubmit={handleSubmit} className="space-y-5">
 
-          {successMessage && (
+            <div className="space-y-2">
+              <label
+                htmlFor="title"
+                className="text-sm font-semibold text-slate-700"
+              >
+                Trip Title
+              </label>
 
-            <div className="space-y-3">
+              <input
+                id="title"
+                type="text"
+                value={formData.title}
+                onChange={onChange("title")}
+                placeholder="Summer in Istanbul"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
+              />
+            </div>
 
-              <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
-                ✓ {successMessage}
-              </p>
+            <div className="space-y-2">
+              <label
+                htmlFor="destination"
+                className="text-sm font-semibold text-slate-700"
+              >
+                Destination
+              </label>
 
-              {/* VIEW CREATED TRIP */}
+              <input
+                id="destination"
+                type="text"
+                value={formData.destination}
+                onChange={onChange("destination")}
+                placeholder="Istanbul"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
+              />
+            </div>
 
-              {createdTripId && (
+            <div className="grid gap-5 sm:grid-cols-2">
 
-                <div className="grid gap-3 sm:grid-cols-2">
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      router.push(
-                        `/my-trips/${createdTripId}`
-                      )
-                    }
-                    className="rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-slate-800"
-                  >
-                    View Trip
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() =>
-                      router.push("/my-trips")
-                    }
-                    className="rounded-2xl border border-gray-200 bg-white px-5 py-3 font-semibold text-gray-800 shadow-sm transition hover:bg-gray-50"
-                  >
-                    View All My Trips
-                  </button>
-
-                </div>
-
-              )}
-
-              {/* EDIT MODE VIEW */}
-
-              {isEditMode && editTripId && (
-
-                <button
-                  type="button"
-                  onClick={() =>
-                    router.push(
-                      `/my-trips/${editTripId}`
-                    )
-                  }
-                  className="w-full rounded-2xl border border-gray-200 bg-white px-5 py-3 font-semibold text-gray-800 shadow-sm transition hover:bg-gray-50"
+              <div className="space-y-2">
+                <label
+                  htmlFor="startDate"
+                  className="text-sm font-semibold text-slate-700"
                 >
-                  View Updated Trip
-                </button>
+                  Start Date
+                </label>
 
-              )}
+                <input
+                  id="startDate"
+                  type="date"
+                  value={formData.startDate}
+                  onChange={onChange("startDate")}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label
+                  htmlFor="endDate"
+                  className="text-sm font-semibold text-slate-700"
+                >
+                  End Date
+                </label>
+
+                <input
+                  id="endDate"
+                  type="date"
+                  value={formData.endDate}
+                  onChange={onChange("endDate")}
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
+                />
+              </div>
 
             </div>
 
-          )}
+            <div className="space-y-2">
+              <label
+                htmlFor="budget"
+                className="text-sm font-semibold text-slate-700"
+              >
+                Budget
+              </label>
 
-          {/* SUBMIT */}
+              <input
+                id="budget"
+                type="number"
+                min="0"
+                step="0.01"
+                value={formData.budget}
+                onChange={onChange("budget")}
+                placeholder="50000"
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-cyan-500 focus:ring-4 focus:ring-cyan-100"
+              />
+            </div>
 
-          <button
-            type="submit"
-            disabled={
-              isSubmitting ||
-              isPrefillLoading
-            }
-            className="w-full rounded-2xl bg-gradient-to-r from-sky-500 to-blue-600 px-6 py-4 font-semibold text-white shadow-lg shadow-blue-500/20 transition hover:-translate-y-0.5 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isSubmitting
-              ? isEditMode
-                ? "Updating Trip..."
-                : "Creating Trip..."
-              : isEditMode
-                ? "Update Trip"
-                : "Create Trip"}
-          </button>
+            {error && (
+              <p className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+                {error}
+              </p>
+            )}
 
-        </form>
+            {successMessage && (
+              <div className="space-y-3">
+
+                <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                  ✓ {successMessage}
+                </p>
+
+                {createdTripId && (
+                  <div className="grid gap-3 sm:grid-cols-2">
+
+                    <button
+                      type="button"
+                      onClick={() =>
+                        router.push(`/my-trips/${createdTripId}`)
+                      }
+                      className="rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-5 py-3 font-semibold text-white"
+                    >
+                      View Trip
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => router.push("/my-trips")}
+                      className="rounded-xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 hover:bg-slate-50"
+                    >
+                      View All My Trips
+                    </button>
+
+                  </div>
+                )}
+
+                {isEditMode && editTripId && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      router.push(`/my-trips/${editTripId}`)
+                    }
+                    className="w-full rounded-xl border border-slate-200 bg-white px-5 py-3 font-semibold text-slate-700 hover:bg-slate-50"
+                  >
+                    View Updated Trip
+                  </button>
+                )}
+
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={isSubmitting || isPrefillLoading}
+              className="w-full rounded-xl bg-gradient-to-r from-blue-600 to-cyan-500 px-6 py-4 font-semibold text-white shadow-lg transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSubmitting
+                ? isEditMode
+                  ? "Updating Trip..."
+                  : "Creating Trip..."
+                : isEditMode
+                  ? "Update Trip"
+                  : "Create Trip"}
+            </button>
+
+          </form>
+
+        </div>
 
       </div>
 
