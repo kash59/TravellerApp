@@ -1,9 +1,9 @@
-import Navbar from "@/components/Navbar";
+
 import Hero from "@/components/Hero";
 import FeaturedDestinations from "@/components/FeaturedDestinations";
 import AIBanner from "@/components/AIBanner";
 import WhyChooseUs from "@/components/WhyChooseUS";
-import Stats from "@/components/Stats";
+
 import Testimonials from "@/components/Testimonials";
 import Footer from "@/components/Footer";
 import DestinationSearch from "@/components/DestinationSearch";
@@ -13,7 +13,7 @@ import DestinationSearch from "@/components/DestinationSearch";
 export default function Home() {
   return (
     <>
-      <Navbar />
+      
 
       <Hero />
 
