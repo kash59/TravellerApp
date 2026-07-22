@@ -10,21 +10,25 @@ dotenv.config();
 const app = express();
 
 // ==========================================
-// MIDDLEWARE
+// CORS CONFIGURATION
 // ==========================================
 
-app.use(express.json());
+const allowedOrigins = [
+  // Local frontend
+  "http://localhost:3000",
+
+  // Deployed Vercel frontend
+  "https://traveller-app-steel.vercel.app",
+
+  // Optional frontend URL from Render environment variables
+  process.env.FRONTEND_URL,
+].filter(Boolean);
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      const allowedOrigins = [
-        "http://localhost:3000",
-        process.env.FRONTEND_URL,
-      ].filter(Boolean);
-
       // Allow requests without an Origin header
-      // such as Postman and server-to-server requests
+      // Example: Postman or server-to-server requests
       if (!origin) {
         return callback(null, true);
       }
@@ -32,6 +36,8 @@ app.use(
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
+
+      console.log("Blocked by CORS:", origin);
 
       return callback(
         new Error("Not allowed by CORS")
@@ -55,6 +61,12 @@ app.use(
 );
 
 // ==========================================
+// MIDDLEWARE
+// ==========================================
+
+app.use(express.json());
+
+// ==========================================
 // HEALTH ROUTE
 // ==========================================
 
@@ -66,7 +78,7 @@ app.get("/", (req, res) => {
 });
 
 // ==========================================
-// ROUTES
+// AUTH ROUTES
 // ==========================================
 
 app.use(
@@ -74,37 +86,63 @@ app.use(
   require("./routes/authRoutes")
 );
 
+// ==========================================
+// TRIP ROUTES
+// ==========================================
+
 app.use(
   "/api/trips",
   require("./routes/tripRoutes")
 );
+
+// ==========================================
+// CITY ROUTES
+// ==========================================
 
 app.use(
   "/api/cities",
   require("./routes/cityRoutes")
 );
 
+// ==========================================
+// SUGGESTION ROUTES
+// ==========================================
+
 app.use(
   "/api/suggestions",
   require("./routes/suggestionRoutes")
 );
+
+// ==========================================
+// USER ROUTES
+// ==========================================
 
 app.use(
   "/api/users",
   require("./routes/userRoutes")
 );
 
+// ==========================================
+// AI ITINERARY ROUTES
+// ==========================================
+
 app.use(
   "/api/ai",
   require("./routes/aiRoutes")
 );
+
+// ==========================================
+// DESTINATION ROUTES
+// ==========================================
 
 app.use(
   "/api/destinations",
   destinationRoutes
 );
 
-// Community Travel Tips
+// ==========================================
+// COMMUNITY TRAVEL TIPS ROUTES
+// ==========================================
 
 app.use(
   "/api/travel-tips",
@@ -115,8 +153,7 @@ app.use(
 // PORT
 // ==========================================
 
-const PORT =
-  process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000;
 
 // ==========================================
 // DATABASE + SERVER
@@ -132,19 +169,14 @@ if (!process.env.MONGO_URI) {
 
 mongoose
   .connect(process.env.MONGO_URI)
-
   .then(() => {
-    console.log(
-      "MongoDB Connected"
-    );
+    console.log("MongoDB Connected");
 
     app.listen(PORT, () => {
-      console.log(
-        `Server running on port ${PORT}`
-      );
+      console.log(`Server running on port ${PORT}`);
+      console.log("Allowed frontend origins:", allowedOrigins);
     });
   })
-
   .catch((error) => {
     console.error(
       "MongoDB connection error:",
