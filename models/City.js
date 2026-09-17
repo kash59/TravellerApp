@@ -59,8 +59,12 @@ const citySchema = new mongoose.Schema(
             {
                 type: String
             }
-        ]
+        ],
+        
+        
     },
+
+    
     {
         timestamps: true
     }

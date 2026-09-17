@@ -58,6 +58,41 @@ const placeSuggestionSchema = new mongoose.Schema({
         default: 0
     },
 
+    reality: {
+    bestTime: {
+        type: String,
+        default: "Not enough data"
+    },
+
+    crowdLevel: {
+        type: String,
+        enum: ["Low", "Moderate", "High", "Unknown"],
+        default: "Unknown"
+    },
+
+    photography: {
+        type: String,
+        enum: ["Poor", "Average", "Good", "Excellent", "Unknown"],
+        default: "Unknown"
+    },
+
+    valueForMoney: {
+        type: String,
+        enum: ["Poor", "Average", "Good", "Excellent", "Unknown"],
+        default: "Unknown"
+    },
+
+    accessibility: {
+        type: String,
+        enum: ["Difficult", "Limited", "Good", "Excellent", "Unknown"],
+        default: "Unknown"
+    },
+
+    aiSummary: {
+        type: String,
+        default: ""
+    }
+},
     reviews: [
         {
             userId: {
@@ -92,7 +127,8 @@ const placeSuggestionSchema = new mongoose.Schema({
                 enum: ["upvote", "downvote"]
             }
         }
-    ]
+    ],
+    
 
 }, { timestamps: true });
 

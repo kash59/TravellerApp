@@ -111,6 +111,22 @@ interface TravelTip {
 
   createdAt?: string;
 }
+interface RealityData {
+  bestTime: string;
+  crowdLevel: "Low" | "Moderate" | "High" | "Unknown";
+  photography: "Poor" | "Average" | "Good" | "Excellent" | "Unknown";
+  valueForMoney: "Poor" | "Average" | "Good" | "Excellent" | "Unknown";
+  accessibility: "Difficult" | "Limited" | "Good" | "Excellent" | "Unknown";
+  aiSummary: string;
+}
+
+interface PlaceSuggestion {
+  _id: string;
+  placeName: string;
+  ratingAverage?: number;
+  ratingCount?: number;
+  reality?: RealityData;
+}
 
 // ==========================================
 // CURRENT USER TYPE
@@ -139,7 +155,11 @@ export default function RecommendationPage({
 
   const [cityData, setCityData] =
     useState<City | null>(null);
+  const [placeSuggestions, setPlaceSuggestions] =
+  useState<PlaceSuggestion[]>([]);
 
+const [realityLoading, setRealityLoading] =
+  useState(true);
   const [tips, setTips] =
     useState<TravelTip[]>([]);
 
@@ -406,6 +426,74 @@ placeLocations: dynamicPlaces,
 };
 
 // ==========================================
+// FETCH REALITY LAYER
+// ==========================================
+
+const fetchRealityData = async () => {
+  try {
+    setRealityLoading(true);
+
+    const response = await fetch(
+      `${API_URL}/suggestions/${encodeURIComponent(decodedCity)}`,
+      {
+        cache: "no-store",
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data?.message || "Unable to load Reality Layer."
+      );
+    }
+
+    if (!Array.isArray(data)) {
+      setPlaceSuggestions([]);
+      return;
+    }
+
+    const suggestionsWithReality = await Promise.all(
+      data.map(async (place: PlaceSuggestion) => {
+        try {
+          const realityResponse = await fetch(
+            `${API_URL}/suggestions/${place._id}/reality`,
+            {
+              cache: "no-store",
+            }
+          );
+
+          if (!realityResponse.ok) {
+            return place;
+          }
+
+          const realityData = await realityResponse.json();
+
+          return {
+            ...place,
+            reality: realityData.reality,
+          };
+        } catch (error) {
+          console.error(
+            `Unable to load reality for ${place.placeName}:`,
+            error
+          );
+
+          return place;
+        }
+      })
+    );
+
+    setPlaceSuggestions(suggestionsWithReality);
+  } catch (err) {
+    console.error("Unable to load Reality Layer:", err);
+    setPlaceSuggestions([]);
+  } finally {
+    setRealityLoading(false);
+  }
+};
+
+// ==========================================
 // FETCH COMMUNITY TIPS
 // ==========================================
 
@@ -528,6 +616,7 @@ useEffect(() => {
   fetchCity();
   fetchTips();
   fetchCurrentUser();
+   fetchRealityData();
 }, [decodedCity]);
  
   // ==========================================

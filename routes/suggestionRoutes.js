@@ -5,7 +5,7 @@ const PlaceSuggestion = require("../models/PlaceSuggestion");
 const User = require("../models/User");
 const getBadge = require("../utils/badgeHelper");
 const authMiddleware = require("../middleware/authMiddleware");
-
+const analyzeReality = require("../utils/geminiReality");
 
 // ADD SUGGESTION
 
@@ -101,7 +101,31 @@ router.get("/trending/:city", async (req, res) => {
     }
 
 });
+// GET REALITY LAYER
+router.get("/:id/reality", async (req, res) => {
+    try {
+        const suggestion = await PlaceSuggestion.findById(req.params.id)
+            .select("placeName city reality reviews");
 
+        if (!suggestion) {
+            return res.status(404).json({
+                message: "Suggestion not found"
+            });
+        }
+
+        res.status(200).json({
+            placeName: suggestion.placeName,
+            city: suggestion.city,
+            reality: suggestion.reality,
+            reviewCount: suggestion.reviews.length
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            message: error.message
+        });
+    }
+});
 // GET SUGGESTIONS BY CITY
 
 router.get("/:city", async (req, res) => {
@@ -328,7 +352,10 @@ router.post("/:id/review", authMiddleware, async (req, res) => {
             (sum, review) => sum + review.rating,
             0
         ) / suggestion.ratingCount;
+        // Analyze all reviews using Gemini
+const realityAnalysis = await analyzeReality(suggestion.reviews);
 
+suggestion.reality = realityAnalysis;
         if (req.body.rating === 5) {
             const owner = await User.findById(suggestion.submittedBy);
             if (owner) {
