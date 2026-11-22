@@ -37,7 +37,7 @@ export default function ProfilePage() {
         setLoading(true);
         setError("");
 
-        const token = localStorage.getItem("token");
+        const token = sessionStorage.getItem("token");
 
         if (!token) {
           router.push("/login");

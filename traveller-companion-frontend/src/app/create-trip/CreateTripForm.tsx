@@ -36,6 +36,7 @@ export default function CreateTripForm() {
 
   const [error, setError] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [createdTripId, setCreatedTripId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPrefillLoading, setIsPrefillLoading] = useState(false);
 
@@ -47,7 +48,7 @@ export default function CreateTripForm() {
     const loadTripForEdit = async () => {
       if (!editTripId) return;
 
-      const token = localStorage.getItem("token");
+      const token = sessionStorage.getItem("token");
 
       if (!token) {
         setError("Please login first.");
@@ -110,6 +111,7 @@ export default function CreateTripForm() {
 
     setError("");
     setSuccessMessage("");
+    setCreatedTripId(null);
 
     const {
       title,
@@ -142,13 +144,13 @@ export default function CreateTripForm() {
 
     const budgetValue = Number(budget);
 
-    if (Number.isNaN(budgetValue)) {
+    if (!Number.isFinite(budgetValue) || budgetValue < 0) {
       setError("Budget must be a number.");
       return;
     }
 
     const token =
-      localStorage.getItem("token");
+      sessionStorage.getItem("token");
 
     if (!token) {
       setError("Please login first.");
@@ -178,10 +180,17 @@ export default function CreateTripForm() {
           "Trip updated successfully."
         );
       } else {
-        await createTrip(
+        const createdTrip = await createTrip(
           payload,
           token
         );
+
+        const tripId =
+          createdTrip?.trip?._id || createdTrip?._id;
+
+        if (tripId) {
+          setCreatedTripId(tripId);
+        }
 
         setSuccessMessage(
           "Trip created successfully."
@@ -378,9 +387,32 @@ export default function CreateTripForm() {
             {/* SUCCESS */}
 
             {successMessage && (
-              <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                {successMessage}
-              </p>
+              <div className="space-y-3">
+                <p className="rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                  {successMessage}
+                </p>
+
+                {createdTripId && (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        router.push(`/my-trips/${createdTripId}`)
+                      }
+                      className="rounded-xl border border-slate-900 bg-white px-5 py-3 font-medium text-slate-900 transition hover:bg-slate-50"
+                    >
+                      View Trip
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => router.push("/my-trips")}
+                      className="rounded-xl border border-slate-300 bg-white px-5 py-3 font-medium text-slate-700 transition hover:bg-slate-50"
+                    >
+                      View All My Trips
+                    </button>
+                  </div>
+                )}
+              </div>
             )}
 
             {/* BUTTON */}

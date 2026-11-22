@@ -84,7 +84,7 @@ export default function MyTripsPage() {
     setError("");
 
     const token =
-      localStorage.getItem("token");
+      sessionStorage.getItem("token");
 
     if (!token) {
       setError(
@@ -148,7 +148,7 @@ export default function MyTripsPage() {
     tripId: string
   ) => {
     const token =
-      localStorage.getItem("token");
+      sessionStorage.getItem("token");
 
     if (!token) {
       setError(
@@ -197,7 +197,7 @@ export default function MyTripsPage() {
 
   const handleSearch = async () => {
     const token =
-      localStorage.getItem("token");
+      sessionStorage.getItem("token");
 
     if (!token) {
       return;
@@ -244,7 +244,7 @@ export default function MyTripsPage() {
 
   const handleFilter = async () => {
     const token =
-      localStorage.getItem("token");
+      sessionStorage.getItem("token");
 
     if (!token) {
       return;

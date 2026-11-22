@@ -17,69 +17,83 @@ async function analyzeReality(reviews) {
         };
     }
 
-    const reviewText = reviews
-        .map((review, index) => {
-            return `Review ${index + 1}: ${review.comment || ""}`;
-        })
-        .join("\n");
+   const reviewText = reviews
+    .map((review, index) => {
+        return `
+Review ${index + 1}:
+Rating: ${review.rating}/5
+Comment: ${review.comment || "No written comment"}
+`;
+    })
+    .join("\n");
 
-    const prompt = `
-You are analyzing real traveller reviews for a travel website.
+   const prompt = `
+You are an AI travel experience analyst for a travel website.
 
-Analyze ONLY the information present in these reviews.
+Your task is to analyze ONLY the traveller reviews provided below.
 
-Reviews:
 ${reviewText}
 
-Extract the following:
+Identify practical information that would help a future traveller decide how and when to visit this place.
+
+Analyze these aspects:
 
 1. bestTime
+   - Identify the best time mentioned by travellers.
+   - Examples: "Early morning", "Evening", "Weekdays", "Before 10 AM".
+   - If the reviews do not provide enough evidence, return "Not enough data".
+
 2. crowdLevel
+   Allowed values:
+   - Low
+   - Moderate
+   - High
+   - Unknown
+
 3. photography
+   Allowed values:
+   - Poor
+   - Average
+   - Good
+   - Excellent
+   - Unknown
+
 4. valueForMoney
+   Allowed values:
+   - Poor
+   - Average
+   - Good
+   - Excellent
+   - Unknown
+
 5. accessibility
+   Allowed values:
+   - Difficult
+   - Limited
+   - Good
+   - Excellent
+   - Unknown
+
 6. aiSummary
+   - Write a concise 2-3 sentence summary.
+   - Summarize what travellers actually experienced.
+   - Mention positive experiences as well as important warnings or drawbacks when present.
+   - Do not simply repeat the reviews word-for-word.
 
-Allowed values:
+IMPORTANT RULES:
 
-crowdLevel:
-- Low
-- Moderate
-- High
-- Unknown
+- Use ONLY information explicitly supported by the reviews.
+- Do NOT use outside knowledge.
+- Do NOT invent facts.
+- Do NOT assume information that is not mentioned.
+- If there is insufficient evidence for an attribute, return "Unknown".
+- Ratings alone should not be treated as evidence for crowd, accessibility, photography, or best time.
+- Multiple reviews should be considered together.
+- If travellers disagree, reflect the overall evidence rather than inventing certainty.
 
-photography:
-- Poor
-- Average
-- Good
-- Excellent
-- Unknown
+Return ONLY valid JSON.
 
-valueForMoney:
-- Poor
-- Average
-- Good
-- Excellent
-- Unknown
-
-accessibility:
-- Difficult
-- Limited
-- Good
-- Excellent
-- Unknown
-
-For bestTime:
-- Give a short description such as "Early morning", "Evening", "Weekdays", etc.
-- If there is not enough evidence, return "Not enough data".
-
-Important:
-- Do not invent information.
-- Do not assume something that is not mentioned.
-- If the reviews do not provide enough evidence for an attribute, use "Unknown".
-- The summary must be based only on the reviews.
-
-Return ONLY valid JSON in this exact format:
+Use exactly this structure:
 
 {
   "bestTime": "",

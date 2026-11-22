@@ -28,6 +28,10 @@ router.post(
       .notEmpty()
       .withMessage("Title is required"),
 
+    body("destination")
+      .notEmpty()
+      .withMessage("Destination is required"),
+
     body("startDate")
       .isISO8601()
       .withMessage("startDate must be a valid ISO 8601 date"),

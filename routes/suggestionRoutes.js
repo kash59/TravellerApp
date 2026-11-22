@@ -352,10 +352,7 @@ router.post("/:id/review", authMiddleware, async (req, res) => {
             (sum, review) => sum + review.rating,
             0
         ) / suggestion.ratingCount;
-        // Analyze all reviews using Gemini
-const realityAnalysis = await analyzeReality(suggestion.reviews);
-
-suggestion.reality = realityAnalysis;
+        
         if (req.body.rating === 5) {
             const owner = await User.findById(suggestion.submittedBy);
             if (owner) {

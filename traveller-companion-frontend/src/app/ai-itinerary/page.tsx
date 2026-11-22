@@ -67,7 +67,7 @@ export default function AIItineraryPage() {
         setLoadingTrips(true);
 
         const token =
-          localStorage.getItem("token");
+          sessionStorage.getItem("token");
 
         if (!token) {
           setError(
@@ -252,7 +252,7 @@ export default function AIItineraryPage() {
     }
 
     const token =
-      localStorage.getItem("token");
+      sessionStorage.getItem("token");
 
     if (!token) {
       setError(

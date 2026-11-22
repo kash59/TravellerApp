@@ -125,6 +125,7 @@ interface PlaceSuggestion {
   placeName: string;
   ratingAverage?: number;
   ratingCount?: number;
+  reviewCount?: number;
   reality?: RealityData;
 }
 
@@ -225,6 +226,8 @@ const [reviewComment, setReviewComment] =
   useState("");
 const [reviewSubmitting, setReviewSubmitting] =
   useState(false);
+const [reviewError, setReviewError] =
+  useState("");
 const sortedTips = [...tips].sort((a, b) => {
   if (sortBy === "newest") {
     return (
@@ -270,7 +273,7 @@ const fetchCity = async () => {
     setError("");
     setCityData(null);
 
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
 
     // ==========================================
     // 1. TRY CURATED CITY FROM MONGODB
@@ -478,12 +481,14 @@ const fetchRealityData = async () => {
             return place;
           }
 
-          const realityData = await realityResponse.json();
+        const realityData = await realityResponse.json();
 
-          return {
-            ...place,
-            reality: realityData.reality,
-          };
+return {
+  ...place,
+  ratingCount: realityData.reviewCount ?? place.ratingCount ?? 0,
+  reviewCount: realityData.reviewCount ?? place.reviewCount ?? 0,
+  reality: realityData.reality,
+};
         } catch (error) {
           console.error(
             `Reality fetch failed for ${place.placeName}:`,
@@ -500,7 +505,11 @@ const fetchRealityData = async () => {
       suggestionsWithReality
     );
 
-    setPlaceSuggestions(suggestionsWithReality);
+   const sortedSuggestions = [...suggestionsWithReality].sort(
+  (a, b) => (b.reviewCount ?? 0) - (a.reviewCount ?? 0)
+);
+
+setPlaceSuggestions(sortedSuggestions);
 
   } catch (error) {
     console.error(
@@ -516,15 +525,20 @@ const fetchRealityData = async () => {
 };
 
 const handleSubmitReview = async (suggestionId: string) => {
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
 
   if (!token) {
-    setTipError("Please login before adding a review.");
+        localStorage.setItem(
+          "redirectAfterLogin",
+          window.location.pathname
+        );
+        window.location.assign("/login");
     return;
   }
 
   try {
     setReviewSubmitting(true);
+    setReviewError("");
 
     const response = await fetch(
       `${API_URL}/suggestions/${suggestionId}/review`,
@@ -552,12 +566,26 @@ const handleSubmitReview = async (suggestionId: string) => {
     setReviewRating(5);
     await fetchRealityData();
   } catch (err) {
-    setTipError(
+    setReviewError(
+    
       err instanceof Error ? err.message : "Unable to submit review."
     );
   } finally {
     setReviewSubmitting(false);
   }
+};
+const handleStartReview = (suggestionId: string) => {
+  if (!sessionStorage.getItem("token")) {
+    localStorage.setItem(
+      "redirectAfterLogin",
+      window.location.pathname
+    );
+    window.location.assign("/login");
+    return;
+  }
+
+  setReviewError("");
+  setReviewingId(suggestionId);
 };
 
 // ==========================================
@@ -616,7 +644,7 @@ const fetchTips = async () => {
 
 const fetchCurrentUser = async () => {
   try {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
 
     if (!token) {
       setCurrentUser(null);
@@ -710,7 +738,7 @@ useEffect(() => {
     }
 
     const token =
-      localStorage.getItem("token");
+      sessionStorage.getItem("token");
 
     if (!token) {
       setTipError(
@@ -792,7 +820,7 @@ useEffect(() => {
     voteType: "upvote" | "downvote"
   ) => {
     const token =
-      localStorage.getItem("token");
+      sessionStorage.getItem("token");
 
     setTipError("");
     setSuccess("");
@@ -869,7 +897,7 @@ useEffect(() => {
 
     if (!confirmed) return;
 
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
 
     if (!token) {
       setTipError("Please login first.");
@@ -937,7 +965,7 @@ const handleUpdateTip = async (tipId: string) => {
     return;
   }
 
-  const token = localStorage.getItem("token");
+  const token = sessionStorage.getItem("token");
 
   if (!token) {
     setTipError("Please login first.");
@@ -1238,203 +1266,248 @@ const handleUpdateTip = async (tipId: string) => {
         {/* ==================================
             REALITY LAYER
         ================================== */}
+      <section className="mt-16">
+  {/* Section Header */}
+  <div className="mb-8">
+    <div className="flex items-center gap-2 font-semibold uppercase tracking-widest text-cyan-600">
+      <Sparkles size={18} />
+      AI Reality Layer
+    </div>
 
-        <section className="mt-16">
-          <div className="mb-8">
-            <div className="flex items-center gap-2 font-semibold uppercase tracking-widest text-cyan-600">
-              <Sparkles size={18} />
-              Reality Layer
+    <h2 className="mt-3 text-4xl font-extrabold text-slate-900">
+      What travellers really experienced
+    </h2>
+
+    <p className="mt-3 max-w-2xl text-slate-600">
+      Go beyond basic ratings. Our AI analyzes traveller reviews to reveal
+      practical insights about each place.
+    </p>
+  </div>
+
+  {realityLoading ? (
+    <div className="rounded-3xl border border-slate-200 bg-white p-8 text-slate-500 shadow-sm">
+      <div className="flex items-center gap-3">
+        <Sparkles className="animate-pulse text-cyan-600" size={20} />
+        <span>Analyzing traveller experiences...</span>
+      </div>
+    </div>
+  ) : placeSuggestions.length === 0 ? (
+    <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-slate-500 shadow-sm">
+      Reality insights will appear here as travellers review places in this
+      destination.
+    </div>
+  ) : (
+    <div className="grid gap-6 md:grid-cols-2">
+      {placeSuggestions.map((suggestion) => {
+        const reality = suggestion.reality;
+
+        return (
+          <article
+            key={suggestion._id}
+            className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
+          >
+            {/* Place Header */}
+            <div className="border-b border-slate-100 p-6">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-lg bg-cyan-50 p-2 text-cyan-600">
+                      <Sparkles size={18} />
+                    </span>
+
+                    <h3 className="text-2xl font-bold text-slate-900">
+                      {suggestion.placeName}
+                    </h3>
+                  </div>
+
+                  <p className="mt-3 text-sm text-slate-500">
+                    {suggestion.reviewCount ?? 0} traveller reviews
+                  </p>
+                </div>
+
+                {/* Rating */}
+                <div className="rounded-2xl bg-amber-50 px-4 py-3 text-center">
+                  <p className="text-xl font-extrabold text-amber-700">
+                    {suggestion.ratingAverage?.toFixed(1) ?? "--"}
+                  </p>
+
+                  <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">
+                    Traveller rating
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <h2 className="mt-3 text-4xl font-extrabold text-slate-900">
-              What the destination is really like
-            </h2>
+            {reality ? (
+              <>
+                {/* Reality Attributes */}
+                <div className="grid gap-3 p-6 sm:grid-cols-2">
+                  <div className="rounded-2xl bg-slate-50 p-4 transition hover:bg-cyan-50">
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                      🕐 Best time
+                    </p>
 
-            <p className="mt-3 max-w-2xl text-slate-600">
-              Make better plans with traveller ratings and practical insights
-              for places around {cityData.name}.
-            </p>
-          </div>
+                    <p className="mt-2 font-semibold text-slate-900">
+                      {reality.bestTime}
+                    </p>
+                  </div>
 
-          {realityLoading ? (
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 text-slate-500 shadow-sm">
-              Loading real-world insights...
-            </div>
-          ) : placeSuggestions.length === 0 ? (
-            <div className="rounded-3xl border border-dashed border-slate-300 bg-white p-8 text-slate-500 shadow-sm">
-              Reality insights will appear here as travellers review places in
-              this destination.
-            </div>
-          ) : (
-            <div className="grid gap-6 md:grid-cols-2">
-              {placeSuggestions.map((suggestion) => {
-                const reality = suggestion.reality;
+                  <div className="rounded-2xl bg-slate-50 p-4 transition hover:bg-cyan-50">
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                      👥 Crowd level
+                    </p>
 
-                return (
-                  <article
-                    key={suggestion._id}
-                    className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
+                    <p className="mt-2 font-semibold text-slate-900">
+                      {reality.crowdLevel}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-50 p-4 transition hover:bg-cyan-50">
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                      📸 Photography
+                    </p>
+
+                    <p className="mt-2 font-semibold text-slate-900">
+                      {reality.photography}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-50 p-4 transition hover:bg-cyan-50">
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                      💰 Value for money
+                    </p>
+
+                    <p className="mt-2 font-semibold text-slate-900">
+                      {reality.valueForMoney}
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl bg-slate-50 p-4 transition hover:bg-cyan-50 sm:col-span-2">
+                    <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                      ♿ Accessibility
+                    </p>
+
+                    <p className="mt-2 font-semibold text-slate-900">
+                      {reality.accessibility}
+                    </p>
+                  </div>
+                </div>
+
+                {/* AI Summary */}
+                <div className="mx-6 mb-6 overflow-hidden rounded-2xl border border-cyan-100 bg-cyan-50">
+                  <div className="flex items-center gap-2 border-b border-cyan-100 px-5 py-3">
+                    <Sparkles size={17} className="text-cyan-600" />
+
+                    <p className="text-sm font-bold uppercase tracking-wide text-cyan-700">
+                      AI Traveller Insight
+                    </p>
+                  </div>
+
+                  <p className="px-5 py-4 leading-7 text-slate-700">
+                    {reality.aiSummary || "Not enough review data yet."}
+                  </p>
+                </div>
+              </>
+            ) : (
+              <div className="m-6 rounded-2xl bg-slate-50 p-5 text-sm leading-6 text-slate-500">
+                More reality insights will become available after this place
+                receives traveller reviews.
+              </div>
+            )}
+
+            {/* Review Section */}
+            {reviewingId === suggestion._id ? (
+              <form
+                className="border-t border-slate-100 p-6"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  handleSubmitReview(suggestion._id);
+                }}
+              >
+                <p className="text-sm font-semibold text-slate-900">
+                  Share your experience
+                </p>
+
+                {reviewError && (
+                  <p className="mt-3 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+                    {reviewError}
+                  </p>
+                )}
+
+                <div className="mt-3 grid gap-3 sm:grid-cols-[140px_1fr]">
+                  <label className="text-sm text-slate-600">
+                    Rating
+
+                    <select
+                      value={reviewRating}
+                      onChange={(event) =>
+                        setReviewRating(Number(event.target.value))
+                      }
+                      className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900"
+                    >
+                      {[5, 4, 3, 2, 1].map((rating) => (
+                        <option key={rating} value={rating}>
+                          {rating} / 5
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="text-sm text-slate-600">
+                    Review
+
+                    <textarea
+                      value={reviewComment}
+                      onChange={(event) =>
+                        setReviewComment(event.target.value)
+                      }
+                      placeholder="What should other travellers know?"
+                      rows={3}
+                      className="mt-1 w-full resize-none rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none focus:border-cyan-500"
+                    />
+                  </label>
+                </div>
+
+                <div className="mt-3 flex flex-wrap gap-3">
+                  <button
+                    type="submit"
+                    disabled={reviewSubmitting}
+                    className="rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                      <div>
-                        <h3 className="text-2xl font-bold text-slate-900">
-                          {suggestion.placeName}
-                        </h3>
-                        <p className="mt-2 text-sm text-slate-500">
-                          {suggestion.ratingCount ?? 0} traveller reviews
-                        </p>
-                      </div>
+                    {reviewSubmitting
+                      ? "Analyzing..."
+                      : "Submit review"}
+                  </button>
 
-                      <div className="rounded-xl bg-amber-50 px-3 py-2 text-right">
-                        <p className="text-lg font-bold text-amber-700">
-                          {suggestion.ratingAverage?.toFixed(1) ?? "--"} / 5
-                        </p>
-                        <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">
-                          Traveller rating
-                        </p>
-                      </div>
-                    </div>
-
-                    {reality ? (
-                      <>
-                        <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                          <div className="rounded-2xl bg-slate-50 p-4">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                              Best time
-                            </p>
-                            <p className="mt-1 font-semibold text-slate-900">
-                              {reality.bestTime}
-                            </p>
-                          </div>
-                          <div className="rounded-2xl bg-slate-50 p-4">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                              Crowd level
-                            </p>
-                            <p className="mt-1 font-semibold text-slate-900">
-                              {reality.crowdLevel}
-                            </p>
-                          </div>
-                          <div className="rounded-2xl bg-slate-50 p-4">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                              Photography
-                            </p>
-                            <p className="mt-1 font-semibold text-slate-900">
-                              {reality.photography}
-                            </p>
-                          </div>
-                          <div className="rounded-2xl bg-slate-50 p-4">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                              Value for money
-                            </p>
-                            <p className="mt-1 font-semibold text-slate-900">
-                              {reality.valueForMoney}
-                            </p>
-                          </div>
-                          <div className="rounded-2xl bg-slate-50 p-4 sm:col-span-2">
-                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                              Accessibility
-                            </p>
-                            <p className="mt-1 font-semibold text-slate-900">
-                              {reality.accessibility}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="mt-5 border-t border-slate-100 pt-5">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-cyan-600">
-                            Traveller reality check
-                          </p>
-                          <p className="mt-2 leading-7 text-slate-600">
-                            {reality.aiSummary}
-                          </p>
-                        </div>
-                      </>
-                    ) : (
-                      <p className="mt-6 rounded-2xl bg-slate-50 p-4 text-slate-500">
-                        More reality insights will be available after this
-                        place receives traveller reviews.
-                      </p>
-                    )}
-
-                    {reviewingId === suggestion._id ? (
-                      <form
-                        className="mt-6 border-t border-slate-100 pt-5"
-                        onSubmit={(event) => {
-                          event.preventDefault();
-                          handleSubmitReview(suggestion._id);
-                        }}
-                      >
-                        <p className="text-sm font-semibold text-slate-900">
-                          Share your experience
-                        </p>
-
-                        <div className="mt-3 grid gap-3 sm:grid-cols-[140px_1fr]">
-                          <label className="text-sm text-slate-600">
-                            Rating
-                            <select
-                              value={reviewRating}
-                              onChange={(event) =>
-                                setReviewRating(Number(event.target.value))
-                              }
-                              className="mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-slate-900"
-                            >
-                              {[5, 4, 3, 2, 1].map((rating) => (
-                                <option key={rating} value={rating}>
-                                  {rating} / 5
-                                </option>
-                              ))}
-                            </select>
-                          </label>
-
-                          <label className="text-sm text-slate-600">
-                            Review
-                            <textarea
-                              value={reviewComment}
-                              onChange={(event) =>
-                                setReviewComment(event.target.value)
-                              }
-                              placeholder="What should other travellers know?"
-                              rows={3}
-                              className="mt-1 w-full resize-none rounded-xl border border-slate-200 px-3 py-2 text-slate-900 outline-none focus:border-cyan-500"
-                            />
-                          </label>
-                        </div>
-
-                        <div className="mt-3 flex flex-wrap gap-3">
-                          <button
-                            type="submit"
-                            disabled={reviewSubmitting}
-                            className="rounded-xl bg-cyan-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-cyan-700 disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            {reviewSubmitting ? "Submitting..." : "Submit review"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setReviewingId(null)}
-                            className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
-                          >
-                            Cancel
-                          </button>
-                        </div>
-                      </form>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setReviewingId(suggestion._id);
-                          setTipError("");
-                        }}
-                        className="mt-6 rounded-xl border border-cyan-200 px-4 py-2 text-sm font-semibold text-cyan-700 transition hover:bg-cyan-50"
-                      >
-                        Add your review
-                      </button>
-                    )}
-                  </article>
-                );
-              })}
-            </div>
-          )}
-        </section>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setReviewingId(null);
+                      setReviewError("");
+                    }}
+                    className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 transition hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            ) : (
+              <div className="border-t border-slate-100 p-6">
+                <button
+                  type="button"
+                  onClick={() => handleStartReview(suggestion._id)}
+                  className="rounded-xl border border-cyan-200 px-4 py-2 text-sm font-semibold text-cyan-700 transition hover:bg-cyan-50"
+                >
+                  Add your review
+                </button>
+              </div>
+            )}
+          </article>
+        );
+      })}
+    </div>
+  )}
+</section>
 
         {/* ==================================
             COMMUNITY SECTION

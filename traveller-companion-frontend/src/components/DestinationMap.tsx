@@ -136,6 +136,7 @@ export default function DestinationMap({
     <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
 
       <MapContainer
+        key={`${city}-${latitude}-${longitude}`}
         center={cityPosition}
         zoom={9}
         scrollWheelZoom={false}

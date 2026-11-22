@@ -65,7 +65,7 @@ export default function TripDetailsPage() {
       setError("");
 
       const token =
-        localStorage.getItem("token");
+        sessionStorage.getItem("token");
 
       if (!token) {
         setError(
@@ -156,7 +156,7 @@ export default function TripDetailsPage() {
 
   const handleDelete = async () => {
     const token =
-      localStorage.getItem("token");
+      sessionStorage.getItem("token");
 
     const currentTrip = trip;
 
@@ -297,7 +297,7 @@ export default function TripDetailsPage() {
       }
 
       const token =
-        localStorage.getItem("token");
+        sessionStorage.getItem("token");
 
       if (!token) {
         setError(
